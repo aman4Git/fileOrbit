@@ -17,6 +17,7 @@ app.set('view engine', 'ejs');
 //Route configuration
 app.use('/api/files', require('./routes/files'));
 app.use('/files', require('./routes/show'));
+app.use('/files/download', require('./routes/download'));
 
 //Start the server
 app.listen(PORT, () => {
