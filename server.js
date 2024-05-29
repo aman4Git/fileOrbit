@@ -4,7 +4,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const connectDB = require('./config/database');
 const path = require('path');
-
+const cors = require('cors');
 
 //Set default middlewares
 app.use(express.static('public'));
@@ -12,6 +12,12 @@ app.use(express.json());
 
 //Database configuration
 connectDB();
+
+//CORS middleware configuration
+const corsOptions = {
+    origin: process.env.ALLOWED_CLIENTS.slice(',')
+}
+app.use(cors(corsOptions));
 
 //Set Template engine
 app.set('views', path.join(__dirname, '/views'));
