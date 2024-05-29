@@ -1,9 +1,11 @@
+require("dotenv").config();
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const File = require('../models/file');
 const { v4: uuid4 } = require('uuid');
+const sendMail = require('../services/emailService');
 
 //Multer configurations
 let storage = multer.diskStorage({
@@ -67,5 +69,47 @@ router.post('/', (req, res) => {
     });
 
 })
+
+router.post('/send', async (req, res) => {
+
+    //Validate request
+    const { uuid, emailTo, emailFrom } = req.body;
+
+    //if uuid, emailTo and emailFrom is empty
+    if(!uuid ||!emailTo ||!emailFrom){
+        return res.status(422).send({error: 'All fields are required'});
+    }
+
+    //Get data from the database
+    const file = await File.findOne({uuid: uuid});
+
+    //Check if file exists do not sent the mail
+    if(file.sender){
+        return res.status(422).send({error: 'Email already sent.'});
+    }
+
+    //If email is not sent already update sender and receiver
+    file.sender = emailFrom;
+    file.receiver = emailTo;
+    const response = await file.save();
+
+    //send the mail
+    sendMail({
+        from   : emailFrom,
+        to     : emailTo,
+        subject: 'You have received a file from FileOrbit',
+        text   : `${emailFrom} shared a file with you.`,
+        html   : require('../services/emailTemplate')({
+            emailFrom   : emailFrom,
+            downloadLink: `${process.env.APP_BASE_URL}/files/${file.uuid}`,
+            size        : parseInt(file.size/1000) + 'KB',
+            expires     : '24 hours',
+        }),
+    });
+
+    //Return response
+    return res.send({success: true});
+
+});
 
 module.exports = router;

@@ -5,7 +5,10 @@ const PORT = process.env.PORT || 3000;
 const connectDB = require('./config/database');
 const path = require('path');
 
+
+//Set default middlewares
 app.use(express.static('public'));
+app.use(express.json());
 
 //Database configuration
 connectDB();
